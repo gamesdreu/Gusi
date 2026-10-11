@@ -13,7 +13,7 @@ Por Andreu Sempere Mico. Juego de dados y gusanos para 2 a 7 jugadores, en el na
 
 ## Publicarlo en GitHub Pages
 
-1. Crea un repositorio público y sube `index.html` y este `README.md`.
+1. Crea un repositorio público y sube todos los archivos: `index.html`, `README.md`, `favicon.svg`, `favicon-32.png`, `apple-touch-icon.png` e `icon-512.png`.
 2. En el repositorio ve a **Settings → Pages**.
 3. En **Source** elige **Deploy from a branch**, la rama `main` y la carpeta `/ (root)`, y guarda.
 4. En un par de minutos el juego estará en `https://TU-USUARIO.github.io/NOMBRE-DEL-REPO/`.
