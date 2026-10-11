@@ -1,0 +1,620 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1C1430">
+<meta name="description" content="Gusi, un juego de dados y gusanos para 2 a 7 jugadores. Por Andreu Sempere Mico.">
+<title>Gusi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#1C1430; --surface:#271D40; --surface-2:#342957; --line:rgba(255,255,255,.08);
+  --pink:#FF5C9A; --pink-deep:#C9306B;
+  --sun:#FFC94A; --sun-hi:#FFDD80; --sun-deep:#D98C17;
+  --mint:#6BE3C5; --paper:#FFFFFF; --paper-edge:#D6CCEB; --ink:#1C1430;
+  --text:#F6F1FF; --muted:#AFA3D1; --alert:#FF9BBF;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+*,*::before,*::after{box-sizing:inherit}
+html,body{margin:0;min-height:100%}
+body{
+  background-color:var(--bg);
+  background-image:radial-gradient(rgba(255,255,255,.055) 1px, transparent 1.4px);
+  background-size:22px 22px;
+  color:var(--text);
+  font-family:"Bricolage Grotesque","Trebuchet MS","Segoe UI",system-ui,sans-serif;
+  font-size:17px; line-height:1.45; -webkit-tap-highlight-color:transparent;
+}
+main{max-width:640px;margin:0 auto;padding:18px 16px 44px}
+[hidden]{display:none!important}
+:focus-visible{outline:3px solid var(--mint);outline-offset:2px}
+button{font:inherit;color:inherit}
+
+/* ---------- Portada ---------- */
+.hero{position:relative;padding:22px 0 26px}
+.logo{
+  position:relative;display:inline-block;margin:0;
+  font-size:clamp(5rem,30vw,8.5rem);font-weight:800;line-height:.85;letter-spacing:-.06em;
+  color:var(--pink);text-shadow:0 .07em 0 var(--pink-deep);
+}
+.hero-worm{position:absolute;right:-.62em;top:-.08em;width:.62em;color:var(--sun);transform-origin:20% 80%;animation:wiggle 1.4s ease-in-out .3s 2}
+@keyframes wiggle{0%,100%{transform:rotate(0)}25%{transform:rotate(-14deg) translateY(-3px)}60%{transform:rotate(9deg)}}
+.by{margin:22px 0 0;color:var(--muted);font-size:1rem}
+.by strong{color:var(--text);font-weight:600}
+.lead{margin:6px 0 0;color:var(--muted);max-width:32ch}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:26px;padding:20px}
+.field-label{display:block;font-weight:700;font-size:1.05rem;margin:0 0 12px}
+.count{display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-bottom:26px}
+.count-btn{height:50px;border-radius:15px;border:0;background:var(--surface-2);font-size:1.25rem;font-weight:700;cursor:pointer;transition:transform .12s}
+.count-btn:active{transform:scale(.94)}
+.count-btn[aria-pressed="true"]{background:var(--pink);color:#fff;box-shadow:inset 0 -4px 0 var(--pink-deep)}
+
+.name-row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:10px;margin-bottom:10px}
+.avatar{
+  width:40px;height:40px;flex:0 0 40px;border-radius:50%;display:grid;place-items:center;
+  background:var(--c);color:var(--ink);font-weight:800;font-size:1.05rem;
+  box-shadow:inset 0 -3px 0 rgba(0,0,0,.18);
+}
+.name-row input[type=text]{
+  font:inherit;width:100%;min-width:0;padding:11px 14px;border-radius:14px;
+  border:2px solid transparent;background:var(--surface-2);color:var(--text);
+}
+.name-row input[type=text]::placeholder{color:var(--muted);opacity:.8}
+.name-row input[type=text]:focus{border-color:var(--pink);outline:none}
+.cpu{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:.9rem;cursor:pointer;user-select:none}
+.cpu input{
+  appearance:none;-webkit-appearance:none;margin:0;cursor:pointer;
+  width:42px;height:26px;border-radius:99px;background:var(--surface-2);position:relative;transition:background .2s;
+}
+.cpu input::before{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:transform .2s,background .2s}
+.cpu input:checked{background:var(--pink)}
+.cpu input:checked::before{transform:translateX(16px);background:#fff}
+.error{color:var(--alert);min-height:1.45em;margin:12px 0}
+
+.rules{margin-top:22px;color:var(--muted)}
+.rules summary{cursor:pointer;color:var(--text);font-weight:700;padding:6px 0}
+.rules ul{padding-left:1.2em;margin:10px 0 0}
+.rules li{margin-bottom:7px;max-width:60ch}
+
+/* ---------- Botones ---------- */
+.primary,.secondary{width:100%;font-weight:700;font-size:1.1rem;border-radius:18px;padding:15px 20px;cursor:pointer;border:0;text-align:center;transition:transform .1s}
+.primary{background:var(--pink);color:#fff;box-shadow:inset 0 -5px 0 var(--pink-deep)}
+.primary:active{transform:translateY(2px);box-shadow:inset 0 -2px 0 var(--pink-deep)}
+.secondary{background:var(--surface-2);color:var(--text)}
+.secondary:active{transform:translateY(2px)}
+.ghost{background:var(--surface);border:1px solid var(--line);border-radius:99px;color:var(--muted);padding:7px 16px;cursor:pointer}
+
+/* ---------- Partida ---------- */
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.logo-sm{font-size:2rem;font-weight:800;letter-spacing:-.05em;color:var(--pink);text-shadow:0 .07em 0 var(--pink-deep);line-height:1}
+.grill{display:grid;grid-template-columns:repeat(8,1fr);gap:6px;padding:12px;background:var(--surface);border:1px solid var(--line);border-radius:22px}
+.tile{
+  aspect-ratio:3/4.3;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:6px 2px 8px;
+  background:linear-gradient(180deg,var(--sun-hi),var(--sun) 55%);color:var(--ink);
+  box-shadow:inset 0 -4px 0 var(--sun-deep);transition:transform .2s;
+}
+.tile .tv{font-weight:800;font-size:clamp(.9rem,3.9vw,1.25rem);line-height:1;letter-spacing:-.03em}
+.tile .tw{display:flex;flex-wrap:wrap;justify-content:center;gap:1px 2px;color:var(--pink-deep)}
+.tile .tw .w{width:clamp(10px,2.9vw,16px)}
+.tile.empty{background:none;box-shadow:none;border:2px dashed var(--surface-2)}
+.tile.off{background:repeating-linear-gradient(135deg,var(--surface-2) 0 6px,#2E2450 6px 12px);box-shadow:none}
+.tile.target{outline:3px solid var(--mint);outline-offset:2px;transform:translateY(-5px)}
+
+.players{display:flex;gap:8px;overflow-x:auto;padding:14px 2px;scrollbar-width:none}
+.players::-webkit-scrollbar{display:none}
+.pl{flex:0 0 auto;display:flex;align-items:center;gap:10px;padding:8px 10px 8px 8px;border-radius:20px;background:var(--surface);border:2px solid var(--line)}
+.pl.cur{border-color:var(--pink);background:var(--surface-2)}
+.pl .avatar{width:34px;height:34px;flex-basis:34px;font-size:.95rem}
+.pl .nm{font-weight:700;max-width:9ch;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.2}
+.pl .tag{display:block;color:var(--muted);font-size:.75rem;font-weight:500}
+.mini{width:28px;height:38px;border-radius:6px;background:linear-gradient(180deg,var(--sun-hi),var(--sun) 55%);box-shadow:inset 0 -3px 0 var(--sun-deep);color:var(--ink);font-weight:800;font-size:.85rem;display:grid;place-items:center}
+.mini.none{background:none;box-shadow:none;border:2px dashed var(--surface-2)}
+.mini.target{outline:3px solid var(--mint);outline-offset:1px}
+.wc{display:flex;align-items:center;gap:4px;color:var(--muted);font-size:.9rem;font-weight:600}
+.wc .w{width:19px;color:var(--pink)}
+
+.turn{background:var(--surface);border:1px solid var(--line);border-radius:26px;padding:18px}
+.status{margin:0 0 16px;min-height:2.9em;font-size:1.08rem;font-weight:500}
+.status.bust{color:var(--alert)}
+.dice{display:flex;flex-wrap:wrap;gap:9px;min-height:54px;align-items:center}
+.die{
+  width:54px;height:54px;padding:9px;border-radius:15px;border:0;background:var(--paper);
+  box-shadow:inset 0 -5px 0 var(--paper-edge);display:grid;grid-template:repeat(3,1fr)/repeat(3,1fr);
+  transition:transform .15s,box-shadow .15s;
+}
+.die .p{width:9px;height:9px;border-radius:50%;background:var(--ink);place-self:center}
+.die.worm{display:flex;align-items:center;justify-content:center;color:var(--pink)}
+.die.worm .w{width:38px}
+.die.ghost{background:none;box-shadow:none;border:2px dashed var(--surface-2)}
+button.die{cursor:pointer}
+button.die:disabled{opacity:.25;cursor:not-allowed}
+button.die.hl{transform:translateY(-5px) rotate(-4deg);box-shadow:inset 0 -5px 0 var(--paper-edge),0 0 0 3px var(--mint)}
+.kept-box{margin-top:18px;padding:14px;border-radius:18px;background:var(--surface-2)}
+.kept-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin-bottom:10px;color:var(--muted);font-size:.95rem}
+.kept-head strong{color:var(--text);font-size:1.6rem;font-weight:800;letter-spacing:-.03em}
+.worm-flag{display:inline-flex;align-items:center;gap:4px;margin-left:6px;font-weight:600}
+.worm-flag .w{width:18px}
+.worm-flag.yes{color:var(--mint)}
+.dice.kept{min-height:40px}
+.dice.kept .die{width:40px;height:40px;padding:6px;border-radius:11px;box-shadow:inset 0 -3px 0 var(--paper-edge)}
+.dice.kept .die .p{width:7px;height:7px}
+.dice.kept .die.worm .w{width:28px}
+.empty-note{color:var(--muted);font-size:.95rem}
+.actions{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+.actions:empty{display:none}
+
+@keyframes tumble{from{transform:rotate(-40deg) scale(.4);opacity:0}to{transform:none}}
+.rolling .die{animation:tumble .34s cubic-bezier(.2,.9,.3,1.35) both;animation-delay:calc(var(--i) * 45ms)}
+
+/* ---------- Resultado ---------- */
+.winner{font-size:clamp(2.6rem,13vw,4.2rem);font-weight:800;letter-spacing:-.05em;line-height:.95;margin:28px 0 8px;color:var(--pink);text-shadow:0 .06em 0 var(--pink-deep)}
+.ranking{list-style:none;padding:0;margin:24px 0}
+.ranking li{display:grid;grid-template-columns:auto 1fr auto;grid-template-areas:"av nm wc" "av tl tl";align-items:center;gap:2px 12px;padding:12px 14px;margin-bottom:8px;border-radius:18px;background:var(--surface);border:1px solid var(--line)}
+.ranking li:first-child{border-color:var(--sun)}
+.ranking .avatar{grid-area:av}
+.ranking .nm{grid-area:nm;font-weight:700}
+.ranking .wc{grid-area:wc;font-size:1rem;color:var(--text)}
+.ranking .tiles{grid-area:tl;color:var(--muted);font-size:.88rem}
+.credit{margin-top:28px;text-align:center;color:var(--muted);font-size:.9rem}
+
+@media (prefers-reduced-motion:reduce){
+  .rolling .die,.hero-worm{animation:none}
+  .tile,.die,.count-btn,.primary,.secondary{transition:none}
+}
+@media (max-width:380px){
+  .count{grid-template-columns:repeat(3,1fr)}
+  .die{width:47px;height:47px;padding:8px}
+  .cpu span{display:none}
+}
+</style>
+</head>
+<body>
+<main>
+
+  <!-- Configuración -->
+  <section id="setup">
+    <header class="hero">
+      <h1 class="logo">Gusi<svg class="hero-worm" viewBox="0 0 40 22" aria-hidden="true"><path d="M5 15 C 11 4, 17 4, 21 12 S 31 20, 35 9" fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round"/><circle cx="35.6" cy="7.6" r="1.7" fill="#1C1430"/></svg></h1>
+      <p class="by">by <strong>Andreu Sempere Mico</strong></p>
+      <p class="lead">Tira los dados, junta gusanos y quédate con las mejores fichas.</p>
+    </header>
+
+    <div class="panel">
+      <span class="field-label" id="countLabel">¿Cuántos jugadores?</span>
+      <div class="count" id="countBtns" role="group" aria-labelledby="countLabel"></div>
+
+      <span class="field-label">¿Quién juega?</span>
+      <div id="names"></div>
+      <p id="setupError" class="error" role="alert"></p>
+      <button id="startBtn" class="primary" type="button">Crear partida</button>
+    </div>
+
+    <details class="rules">
+      <summary>Cómo se juega</summary>
+      <ul>
+        <li>En tu turno tiras 8 dados. Eliges un valor y apartas todos los dados que lo muestran. No puedes elegir un valor que ya hayas apartado antes en ese turno.</li>
+        <li>Después decides: vuelves a tirar los dados que quedan o te plantas. El gusano vale 5 puntos.</li>
+        <li>Para coger ficha necesitas al menos un gusano apartado. Te llevas la ficha del centro igual a tu suma o, si no está, la más alta por debajo.</li>
+        <li>Si tu suma es exactamente la ficha de arriba de otro jugador, se la puedes robar.</li>
+        <li>Si fallas, devuelves tu ficha de arriba al centro y la ficha más alta del centro queda fuera de juego.</li>
+        <li>Cuando no quedan fichas en el centro, gana quien tenga más gusanos. Si hay empate, gana quien tenga la ficha más alta.</li>
+      </ul>
+    </details>
+  </section>
+
+  <!-- Partida -->
+  <section id="game" hidden>
+    <div class="topbar">
+      <span class="logo-sm">Gusi</span>
+      <button id="quitBtn" class="ghost" type="button">Salir</button>
+    </div>
+    <div id="grill" class="grill" aria-label="Fichas del centro"></div>
+    <div id="players" class="players" aria-label="Jugadores"></div>
+    <div class="turn">
+      <p id="status" class="status" aria-live="polite"></p>
+      <div id="rolled" class="dice"></div>
+      <div class="kept-box">
+        <div class="kept-head">
+          <span>Apartados<span id="wormFlag" class="worm-flag"></span></span>
+          <span>Suma <strong id="sum">0</strong></span>
+        </div>
+        <div id="kept" class="dice kept"></div>
+      </div>
+      <div id="actions" class="actions"></div>
+    </div>
+  </section>
+
+  <!-- Resultado -->
+  <section id="over" hidden>
+    <h1 class="winner" id="winner"></h1>
+    <p class="lead" id="winnerSub"></p>
+    <ol id="ranking" class="ranking"></ol>
+    <div class="actions">
+      <button id="againBtn" class="primary" type="button">Revancha con los mismos jugadores</button>
+      <button id="setupBtn" class="secondary" type="button">Nueva partida</button>
+    </div>
+    <p class="credit">Gusi, by Andreu Sempere Mico</p>
+  </section>
+
+</main>
+
+<script>
+
+const WORM = 6;
+const MIN_PLAYERS = 2, MAX_PLAYERS = 7;
+const COLORS = ["#FF5C9A","#FFC94A","#6BE3C5","#5CB8FF","#B98CFF","#FF8A5C","#C8E66B"];
+const PIPS = {1:[5], 2:[3,7], 3:[3,5,7], 4:[1,3,7,9], 5:[1,3,5,7,9]};
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const wormsFor = v => v <= 24 ? 1 : v <= 28 ? 2 : v <= 32 ? 3 : 4;
+const faceValue = f => f === WORM ? 5 : f;
+const faceName = f => f === WORM ? "gusano" : String(f);
+const wormSVG = () => `<svg class="w" viewBox="0 0 40 22" aria-hidden="true"><path d="M5 15 C 11 4, 17 4, 21 12 S 31 20, 35 9" fill="none" stroke="currentColor" stroke-width="6.5" stroke-linecap="round"/><circle cx="35.6" cy="7.6" r="1.7" fill="#1C1430"/></svg>`;
+const initial = (name, i) => (name.trim()[0] || String(i+1)).toUpperCase();
+const avatarHTML = p => `<span class="avatar" style="--c:${p.color}" aria-hidden="true">${esc(initial(p.name, 0))}</span>`;
+const faceInner = f => f === WORM ? wormSVG()
+  : PIPS[f].map(k => `<span class="p" style="grid-area:${Math.ceil(k/3)}/${(k-1)%3+1}"></span>`).join("");
+
+function show(id){
+  ["setup","game","over"].forEach(s => $("#"+s).hidden = s !== id);
+  window.scrollTo(0, 0);
+}
+
+/* ---------- Configuración de la partida ---------- */
+let count = 2;
+const draft = Array.from({length: MAX_PLAYERS}, () => ({name: "", cpu: false}));
+
+function saveDraft(){
+  for (let i = 0; i < count; i++){
+    const t = $("#n"+i), c = $("#c"+i);
+    if (t){ draft[i].name = t.value; draft[i].cpu = c.checked; }
+  }
+}
+
+function renderSetup(){
+  const box = $("#countBtns");
+  box.innerHTML = "";
+  for (let n = MIN_PLAYERS; n <= MAX_PLAYERS; n++){
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "count-btn"; b.textContent = n;
+    b.setAttribute("aria-pressed", n === count);
+    b.onclick = () => { saveDraft(); count = n; $("#setupError").textContent = ""; renderSetup(); };
+    box.append(b);
+  }
+  const names = $("#names");
+  names.innerHTML = "";
+  for (let i = 0; i < count; i++){
+    const row = document.createElement("div");
+    row.className = "name-row";
+    row.innerHTML = `<span class="avatar" style="--c:${COLORS[i]}" aria-hidden="true"></span>
+      <input id="n${i}" type="text" maxlength="14" autocomplete="off" placeholder="Jugador ${i+1}" aria-label="Nombre del jugador ${i+1}">
+      <label class="cpu"><input type="checkbox" id="c${i}"><span>Máquina</span></label>`;
+    names.append(row);
+    const input = row.querySelector("#n"+i);
+    input.value = draft[i].name;
+    const av = row.querySelector(".avatar");
+    const setInitial = () => av.textContent = initial(input.value, i);
+    setInitial();
+    input.addEventListener("input", setInitial);
+    input.addEventListener("keydown", e => { if (e.key === "Enter") $("#startBtn").click(); });
+    row.querySelector("#c"+i).checked = draft[i].cpu;
+  }
+}
+
+$("#startBtn").onclick = () => {
+  saveDraft();
+  const err = $("#setupError");
+  err.textContent = "";
+  const list = [];
+  for (let i = 0; i < count; i++){
+    let name = draft[i].name.trim();
+    if (!name && draft[i].cpu) name = "Máquina " + (i+1);
+    if (!name){
+      err.textContent = `Escribe un nombre para el jugador ${i+1}.`;
+      $("#n"+i).focus(); return;
+    }
+    if (list.some(p => p.name.toLowerCase() === name.toLowerCase())){
+      err.textContent = `Ya hay un jugador llamado ${name}. Elige otro nombre para el jugador ${i+1}.`;
+      $("#n"+i).focus(); return;
+    }
+    list.push({name, cpu: draft[i].cpu, color: COLORS[i]});
+  }
+  newGame(list);
+};
+
+/* ---------- Lógica del juego ---------- */
+let G = null;
+
+function newGame(list){
+  G = {
+    players: list.map(p => ({name: p.name, cpu: p.cpu, color: p.color, stack: []})),
+    tiles: [], cur: 0, phase: "start", dice: 8, rolled: [], kept: [], msg: "", bust: false, anim: false
+  };
+  for (let v = 21; v <= 36; v++) G.tiles.push({v, w: wormsFor(v), off: false});
+  show("game");
+  startTurn();
+}
+
+const cp = () => G.players[G.cur];
+const later = (fn, ms) => { const g = G; setTimeout(() => { if (G === g && !$("#game").hidden) fn(); }, ms); };
+const sumKept = () => G.kept.reduce((s, k) => s + faceValue(k.f) * k.n, 0);
+const hasWorm = () => G.kept.some(k => k.f === WORM);
+const availableFaces = () => [...new Set(G.rolled)].filter(f => !G.kept.some(k => k.f === f));
+const tilesLeft = () => G.tiles.some(t => !t.off);
+
+function claimOptions(){
+  const none = {center: null, steal: []};
+  if (!hasWorm()) return none;
+  const s = sumKept();
+  const below = G.tiles.filter(t => !t.off && t.v <= s);
+  const center = below.length ? below[below.length - 1] : null;
+  const steal = [];
+  G.players.forEach((p, i) => {
+    if (i !== G.cur && p.stack.length && p.stack[p.stack.length - 1].v === s) steal.push(i);
+  });
+  return {center, steal};
+}
+
+function startTurn(){
+  if (!tilesLeft()) return endGame();
+  Object.assign(G, {phase: "start", dice: 8, rolled: [], kept: [], bust: false});
+  const p = cp();
+  G.msg = p.cpu ? `Juega ${p.name}.` : `Te toca, ${p.name}.`;
+  render();
+  if (p.cpu) later(cpuAct, 900);
+}
+
+function roll(){
+  if (!(G.phase === "start" || G.phase === "decide") || G.dice === 0) return;
+  G.rolled = Array.from({length: G.dice}, () => 1 + Math.floor(Math.random() * 6)).sort((a, b) => a - b);
+  G.anim = true;
+  if (!availableFaces().length) return bust("Ningún dado sirve: todos esos valores ya estaban apartados.");
+  G.phase = "choose";
+  G.msg = cp().cpu ? `${cp().name} está eligiendo…` : "Elige un valor. Te quedas con todos los dados que lo muestran.";
+  render();
+}
+
+function take(f){
+  if (G.phase !== "choose" || !availableFaces().includes(f)) return;
+  const n = G.rolled.filter(x => x === f).length;
+  G.kept.push({f, n});
+  G.dice -= n;
+  G.rolled = [];
+  const o = claimOptions();
+  const can = !!(o.center || o.steal.length);
+  if (G.dice === 0 && !can){
+    return bust(hasWorm() ? "Se acabaron los dados y no llegas a ninguna ficha." : "Se acabaron los dados sin ningún gusano apartado.");
+  }
+  G.phase = "decide";
+  const p = cp();
+  if (p.cpu) G.msg = `${p.name} lleva ${sumKept()}.`;
+  else if (can) G.msg = G.dice ? "Puedes plantarte y coger ficha o arriesgarte con otra tirada." : "No te quedan dados. Coge tu ficha.";
+  else G.msg = hasWorm() ? "Todavía no llegas a ninguna ficha. Vuelve a tirar." : "Necesitas al menos un gusano para coger ficha. Vuelve a tirar.";
+  render();
+}
+
+function claimCenter(){
+  const {center} = claimOptions();
+  if (G.phase !== "decide" || !center) return;
+  G.tiles = G.tiles.filter(t => t !== center);
+  cp().stack.push(center);
+  finishTurn(`${cp().name} se lleva la ficha ${center.v}.`);
+}
+
+function claimSteal(i){
+  if (G.phase !== "decide" || !claimOptions().steal.includes(i)) return;
+  const victim = G.players[i];
+  const t = victim.stack.pop();
+  cp().stack.push(t);
+  finishTurn(`${cp().name} le roba la ficha ${t.v} a ${victim.name}.`);
+}
+
+function bust(reason){
+  const p = cp();
+  const parts = [reason];
+  let back = null;
+  if (p.stack.length){
+    back = p.stack.pop();
+    G.tiles.push(back);
+    G.tiles.sort((a, b) => a.v - b.v);
+    parts.push(`${p.name} devuelve la ficha ${back.v}.`);
+  }
+  const avail = G.tiles.filter(t => !t.off);
+  const top = avail[avail.length - 1];
+  if (top && top !== back){
+    top.off = true;
+    parts.push(`La ficha ${top.v} queda fuera de juego.`);
+  }
+  G.bust = true;
+  finishTurn(parts.join(" "));
+}
+
+function finishTurn(msg){
+  G.phase = "done";
+  G.msg = msg;
+  render();
+  if (cp().cpu) later(nextPlayer, 2200);
+}
+
+function nextPlayer(){
+  G.cur = (G.cur + 1) % G.players.length;
+  startTurn();
+}
+
+function endGame(){
+  const rows = G.players.map(p => ({
+    p, worms: p.stack.reduce((s, t) => s + t.w, 0), high: Math.max(0, ...p.stack.map(t => t.v))
+  })).sort((a, b) => b.worms - a.worms || b.high - a.high);
+  const [a, b] = rows;
+  const tie = b && a.worms === b.worms && a.high === b.high;
+  const g = n => n === 1 ? "gusano" : "gusanos";
+  $("#winner").textContent = tie ? "¡Empate!" : `¡Gana ${a.p.name}!`;
+  $("#winnerSub").textContent = tie
+    ? `Hay jugadores empatados con ${a.worms} ${g(a.worms)}.`
+    : `Con ${a.worms} ${g(a.worms)}${b && a.worms === b.worms ? `, y desempata con la ficha ${a.high}` : ""}.`;
+  $("#ranking").innerHTML = rows.map(r => `<li>
+      ${avatarHTML(r.p)}
+      <span class="nm">${esc(r.p.name)}</span>
+      <span class="wc">${wormSVG()} ${r.worms}</span>
+      <span class="tiles">${r.p.stack.length ? "Fichas: " + r.p.stack.map(t => t.v).join(", ") : "Sin fichas"}</span>
+    </li>`).join("");
+  show("over");
+}
+
+/* ---------- Máquina ---------- */
+function cpuAct(){
+  if (G.phase === "start"){ roll(); if (G.phase === "choose") later(cpuAct, 1100); return; }
+  if (G.phase === "choose"){ take(cpuFace()); if (G.phase === "decide") later(cpuAct, 1000); return; }
+  if (G.phase === "decide"){
+    const d = cpuDecide();
+    if (d.t === "roll"){ roll(); if (G.phase === "choose") later(cpuAct, 1100); }
+    else if (d.t === "center") claimCenter();
+    else claimSteal(d.i);
+  }
+}
+
+function cpuFace(){
+  let best = null, bestScore = -Infinity;
+  for (const f of availableFaces()){
+    const n = G.rolled.filter(x => x === f).length;
+    let s = n * (faceValue(f) - 3.2);
+    if (f === WORM) s += hasWorm() ? 0.5 : 7;
+    if (s > bestScore){ bestScore = s; best = f; }
+  }
+  return best;
+}
+
+function cpuDecide(){
+  const o = claimOptions();
+  if (!o.center && !o.steal.length) return {t: "roll"};
+  let best = o.center ? {t: "center", w: o.center.w} : null;
+  for (const i of o.steal){
+    const w = G.players[i].stack.at(-1).w;
+    if (!best || w >= best.w) best = {t: "steal", i, w};
+  }
+  if (G.dice === 0) return best;
+  const freeFaces = 6 - G.kept.length;
+  if (G.dice <= 2 || freeFaces <= 2 || sumKept() >= 29 || best.t === "steal" || (G.dice <= 3 && best.w >= 2)) return best;
+  return {t: "roll"};
+}
+
+/* ---------- Pintar la pantalla ---------- */
+function tileHTML(t, cls){
+  if (t.off) return `<div class="tile off" role="img" aria-label="Ficha ${t.v}, fuera de juego"></div>`;
+  return `<div class="tile ${cls}" role="img" aria-label="Ficha ${t.v}, ${t.w} ${t.w === 1 ? "gusano" : "gusanos"}">
+    <span class="tv">${t.v}</span><span class="tw">${wormSVG().repeat(t.w)}</span></div>`;
+}
+
+function highlight(f, on){
+  document.querySelectorAll(`#rolled button.die[data-f="${f}"]`).forEach(b => b.classList.toggle("hl", on));
+}
+
+function render(){
+  const o = G.phase === "decide" ? claimOptions() : {center: null, steal: []};
+  const human = !cp().cpu;
+
+  // Fichas del centro (16 huecos fijos)
+  let grill = "";
+  for (let v = 21; v <= 36; v++){
+    const t = G.tiles.find(x => x.v === v);
+    grill += t ? tileHTML(t, t === o.center && human ? "target" : "")
+               : `<div class="tile empty" role="img" aria-label="Ficha ${v}, en manos de un jugador"></div>`;
+  }
+  $("#grill").innerHTML = grill;
+
+  // Jugadores
+  $("#players").innerHTML = G.players.map((p, i) => {
+    const top = p.stack.at(-1);
+    const worms = p.stack.reduce((s, t) => s + t.w, 0);
+    const mini = top
+      ? `<div class="mini ${human && o.steal.includes(i) ? "target" : ""}" title="Ficha de arriba">${top.v}</div>`
+      : `<div class="mini none" title="Sin fichas"></div>`;
+    return `<div class="pl ${i === G.cur ? "cur" : ""}">${avatarHTML(p)}<div>
+      <div class="nm">${esc(p.name)}${p.cpu ? '<span class="tag">máquina</span>' : ""}</div>
+      <div class="wc">${wormSVG()} ${worms}</div></div>${mini}</div>`;
+  }).join("");
+  const curChip = $("#players .cur");
+  if (curChip) curChip.scrollIntoView({inline: "nearest", block: "nearest"});
+
+  // Mensaje
+  const st = $("#status");
+  st.textContent = G.msg;
+  st.className = "status" + (G.bust ? " bust" : "");
+
+  // Dados tirados (o huecos de los que quedan)
+  const rolled = $("#rolled");
+  const pick = G.phase === "choose" && human;
+  const af = availableFaces();
+  rolled.className = "dice" + (G.anim ? " rolling" : "");
+  if (G.rolled.length){
+    rolled.innerHTML = G.rolled.map((f, k) => {
+      const cls = `die${f === WORM ? " worm" : ""}`;
+      if (!pick) return `<div class="${cls}" style="--i:${k}" role="img" aria-label="Dado: ${faceName(f)}">${faceInner(f)}</div>`;
+      const n = G.rolled.filter(x => x === f).length;
+      return `<button type="button" class="${cls}" data-f="${f}" style="--i:${k}" ${af.includes(f) ? "" : "disabled"}
+        aria-label="Quedarme ${n} ${n === 1 ? "dado" : "dados"} de ${faceName(f)}">${faceInner(f)}</button>`;
+    }).join("");
+  } else {
+    rolled.innerHTML = '<div class="die ghost"></div>'.repeat(G.dice);
+  }
+  G.anim = false;
+  if (pick){
+    rolled.querySelectorAll("button.die:enabled").forEach(b => {
+      const f = +b.dataset.f;
+      b.onclick = () => take(f);
+      b.onpointerenter = b.onfocus = () => highlight(f, true);
+      b.onpointerleave = b.onblur = () => highlight(f, false);
+    });
+  }
+
+  // Dados apartados
+  $("#kept").innerHTML = G.kept.length
+    ? G.kept.flatMap(k => Array(k.n).fill(k.f))
+        .map(f => `<div class="die${f === WORM ? " worm" : ""}" role="img" aria-label="Apartado: ${faceName(f)}">${faceInner(f)}</div>`).join("")
+    : `<span class="empty-note">Nada apartado todavía.</span>`;
+  $("#sum").textContent = sumKept();
+  const flag = $("#wormFlag");
+  flag.className = "worm-flag" + (hasWorm() ? " yes" : "");
+  flag.innerHTML = G.kept.length ? (hasWorm() ? `${wormSVG()} con gusano` : "sin gusano") : "";
+
+  // Acciones
+  const actions = $("#actions");
+  actions.innerHTML = "";
+  const btn = (label, cls, fn) => {
+    const b = document.createElement("button");
+    b.type = "button"; b.className = cls; b.textContent = label; b.onclick = fn;
+    actions.append(b);
+  };
+  if (human){
+    if (G.phase === "start") btn(`Tirar ${G.dice} dados`, "primary", roll);
+    if (G.phase === "decide"){
+      const canClaim = o.center || o.steal.length;
+      if (o.center) btn(`Coger la ficha ${o.center.v}`, "primary", claimCenter);
+      o.steal.forEach(i => btn(`Robar la ficha ${G.players[i].stack.at(-1).v} a ${G.players[i].name}`, o.center ? "secondary" : "primary", () => claimSteal(i)));
+      if (G.dice > 0) btn(`Volver a tirar (${G.dice} ${G.dice === 1 ? "dado" : "dados"})`, canClaim ? "secondary" : "primary", roll);
+    }
+    if (G.phase === "done"){
+      const next = G.players[(G.cur + 1) % G.players.length];
+      btn(tilesLeft() ? `Pasar turno a ${next.name}` : "Ver resultado", "primary", nextPlayer);
+    }
+  }
+}
+
+/* ---------- Botones generales ---------- */
+$("#quitBtn").onclick = () => {
+  if (confirm("¿Salir de la partida? Se perderá el progreso.")){ G = null; renderSetup(); show("setup"); }
+};
+$("#againBtn").onclick = () => newGame(G.players.map(p => ({name: p.name, cpu: p.cpu, color: p.color})));
+$("#setupBtn").onclick = () => { renderSetup(); show("setup"); };
+
+renderSetup();
+</script>
+</body>
+</html>
